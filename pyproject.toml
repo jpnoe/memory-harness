@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "synapse-memory-harness"
+version = "0.1.0"
+description = "Experimental semantic and graph-based conversational memory retrieval"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26,<3"]
+
+[project.optional-dependencies]
+embeddings = ["sentence-transformers"]
+
+[project.scripts]
+harness-chat = "harness:main"
+memory-demo = "demo:main"
+
+[tool.setuptools]
+py-modules = ["memory", "graph", "harness", "demo"]
