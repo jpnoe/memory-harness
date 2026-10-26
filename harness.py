@@ -9,15 +9,10 @@ from urllib.request import Request, urlopen
 from memory import SemanticMemory, save_messages
 
 API_URL = "https://api.openai.com/v1/chat/completions"
-ROLE_MAP = {"Jake": "user", "Lumen": "assistant", "Lyra": "assistant", "user": "user", "assistant": "assistant"}
 
 
 def convert_to_api_message(message):
-    try:
-        role = ROLE_MAP[message["role"]]
-    except KeyError as error:
-        raise ValueError("Unsupported conversation role") from error
-    return {"role": role, "content": message["content"].strip()}
+    return {"role": message["role"], "content": message["content"].strip()}
 
 
 def build_message_payload(memories, recent):
@@ -75,15 +70,15 @@ def start(memory):
             text = input("\nYou: ")
             if text.strip().lower() == "exit":
                 break
-            query = {"role": "Jake", "content": text}
+            query = {"role": "user", "content": text}
             context, recent = get_context(query, memory)
             try:
                 response = create_chat_completion(context, recent)
             except RuntimeError as error:
                 print(str(error), file=sys.stderr)
                 continue
-            memory.add_memory({"role": "Lumen", "content": response})
-            print("\nLumen:", response)
+            memory.add_memory({"role": "assistant", "content": response})
+            print("\nAssistant:", response)
     except (KeyboardInterrupt, EOFError):
         print("\nSaving and exiting.")
     finally:

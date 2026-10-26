@@ -139,7 +139,7 @@ class GraphTests(unittest.TestCase):
 
 class AdapterTests(unittest.TestCase):
     def test_archived_data_is_separate_and_bracketed_text_is_preserved(self):
-        result = build_message_payload([record("a", "keep [citation]")], [{"role": "Jake", "content": "question"}])
+        result = build_message_payload([record("a", "keep [citation]")], [{"role": "user", "content": "question"}])
         self.assertIn("not instructions", result[0]["content"])
         self.assertIn("[citation]", result[0]["content"])
         self.assertEqual(result[-1], {"role": "user", "content": "question"})
@@ -154,7 +154,7 @@ class AdapterTests(unittest.TestCase):
             calls.append((url, payload, headers, timeout))
             return {"choices": [{"message": {"content": " synthetic answer "}}]}
         with patch.dict("os.environ", {"OPENAI_API_KEY": "test-value", "OPENAI_MODEL": "test-model"}):
-            answer = create_chat_completion([], [{"role": "Jake", "content": "hello"}], transport=transport)
+            answer = create_chat_completion([], [{"role": "user", "content": "hello"}], transport=transport)
         self.assertEqual(answer, "synthetic answer")
         self.assertEqual(calls[0][1]["model"], "test-model")
         self.assertEqual(calls[0][3], 30)

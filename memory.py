@@ -73,7 +73,7 @@ class SemanticMemory:
         messages = deepcopy(messages if messages is not None else load_messages(chat_file))
         # Serialized links are symmetric; restore each undirected edge once.
         for msg in messages:
-            if msg["role"] in ["Jake", "Lumen", "Lyra", "user", "assistant"]:
+            if msg["role"] in ["user", "assistant"]:
                 self.add_memory(msg, skip_save=True)
         self._restore_links(self.messages, self.link_graph, "id")
         self._restore_links(self.emojis, self.emoji_graph, "content")

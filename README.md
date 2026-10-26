@@ -64,7 +64,7 @@ The CLI sends retrieved excerpts and recent conversation to the configured API. 
 | `tests/test_memory.py` | Regression tests using fixed embeddings and a fake API transport |
 | `docs/review.md` | Changes, limits, and evaluation questions |
 
-Runtime history and emoji files belong in ignored `data/`. This source package contains no conversation archive or model weights. Legacy role labels Jake, Lumen, and Lyra remain accepted alongside user and assistant.
+Runtime history and emoji files belong in ignored `data/`. This source package contains no conversation archive or model weights.
 
 ## Limitations
 
