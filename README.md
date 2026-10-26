@@ -1,6 +1,6 @@
 # Associative memory harness
 
-An experimental Python system combining pretrained semantic embeddings, weighted memory links, recursive retrieval, recent context, and a separate emoji-association graph. The project was developed by Lyla Noe with AI collaborators.
+An experimental Python system combining pretrained semantic embeddings, weighted memory links, recursive retrieval, recent context, and a separate emoji-association graph. The project was developed by Jacob Patrick Noe with AI collaborators.
 
 The core retrieves archived conversational material and reinforces links between items retrieved together. An optional command-line adapter supplies that context to a chat model. This is an engineering prototype, not an evaluated model of human memory or emotion.
 
@@ -43,8 +43,6 @@ harness-chat --history data/chat.json --emojis data/emojis.json
 The model ID must be a Chat Completions-compatible model enabled for your account. No live model is selected or contacted by the offline demo. `.env.example` documents variable names; this project does not automatically load dotenv files.
 
 The CLI sends retrieved excerpts and recent conversation to the configured API. Retrieved archive excerpts are labeled as data and kept separate from live conversation turns. This labeling is not a complete prompt-injection defense.
-
-The uploaded source contained an embedded credential. It has been removed from this prepared source. The owner must revoke that original credential before reuse or publication; removing source text does not revoke a key.
 
 ## Retrieval flow
 
