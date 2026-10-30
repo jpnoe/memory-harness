@@ -65,6 +65,7 @@ class SemanticMemory:
         self.model = encoder
         self.memories = []  # List of tuples: (text, vector)
         self.messages = []
+        self._message_ids = set()
         self.link_graph = LinkGraph()
         self.emojis = load_emojis(emoji_file)
         self.emoji_graph = LinkGraph()
@@ -112,7 +113,7 @@ class SemanticMemory:
             raise ValueError("An embedding must be a nonempty finite vector")
         if self.memories and vector.shape != self.memories[0][1].shape:
             raise ValueError("Embedding dimensions differ; use one encoder per history")
-        if any(m["id"] == memory["id"] for m in self.messages):
+        if memory["id"] in self._message_ids:
             raise ValueError("Memory IDs must be unique")
         emojis = extract_emojis(memory["content"])
         memory["emojis"] = emojis
@@ -121,6 +122,7 @@ class SemanticMemory:
 
         self.memories.append((memory, vector))
         self.messages.append(memory)
+        self._message_ids.add(memory["id"])
         if not skip_save:
             save_messages(self.messages, self.chat_file)
             update = False
