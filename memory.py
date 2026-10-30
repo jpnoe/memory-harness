@@ -73,9 +73,12 @@ class SemanticMemory:
         self.emoji_file = emoji_file
         messages = deepcopy(messages if messages is not None else load_messages(chat_file))
         # Serialized links are symmetric; restore each undirected edge once.
-        for msg in messages:
-            if msg["role"] in ["user", "assistant"]:
-                self.add_memory(msg, skip_save=True)
+        eligible_messages = [
+            message
+            for message in messages
+            if message["role"] in ["user", "assistant"]
+        ]
+        self._add_initial_memories(eligible_messages)
         self._restore_links(self.messages, self.link_graph, "id")
         self._restore_links(self.emojis, self.emoji_graph, "content")
 
@@ -95,15 +98,71 @@ class SemanticMemory:
         for (a, b), weight in edges.items():
             graph.link(a, b, weight)
 
-    def add_memory(self, memory, skip_save=False):
+    def _add_initial_memories(self, messages):
+        """Encode unembedded initial memories in one model call."""
+
+        if not messages:
+            return
+
+        unembedded_indices = [
+            index
+            for index, message in enumerate(messages)
+            if "vector" not in message
+        ]
+
+        prepared_vectors = {}
+
+        if unembedded_indices:
+            texts = [
+                messages[index]["content"]
+                for index in unembedded_indices
+            ]
+
+            vectors = np.asarray(
+                self.model.encode(texts),
+                dtype=float,
+            )
+
+            if len(unembedded_indices) == 1 and vectors.ndim == 1:
+                vectors = vectors.reshape(1, -1)
+
+            if (
+                vectors.ndim != 2
+                or vectors.shape[0] != len(unembedded_indices)
+            ):
+                raise ValueError(
+                    "Batch encoder must return one embedding vector per text"
+                )
+
+            for index, vector in zip(unembedded_indices, vectors):
+                prepared_vectors[index] = vector
+
+        for index, message in enumerate(messages):
+            self.add_memory(
+                message,
+                skip_save=True,
+                prepared_vector=prepared_vectors.get(index),
+            )
+
+    def add_memory(
+        self,
+        memory,
+        skip_save=False,
+        *,
+        prepared_vector=None,
+    ):
         memory = deepcopy(memory)
         memory.pop("recent", None)
         memory.pop("weight", None)
-        if "vector" in memory:
-            vector = json.loads(memory["vector"])
-            vector = np.array(vector)
+        if prepared_vector is not None:
+            vector = np.asarray(prepared_vector, dtype=float)
+        elif "vector" in memory:
+            vector = np.asarray(json.loads(memory["vector"]), dtype=float)
         else:
-            vector = self.model.encode(memory["content"])
+            vector = np.asarray(
+                self.model.encode(memory["content"]),
+                dtype=float,
+            )
 
         if "id" not in memory:
             memory["id"] = str(uuid.uuid4())

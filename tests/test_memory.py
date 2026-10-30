@@ -14,13 +14,37 @@ from memory import SemanticMemory, cosine_similarity, save_messages
 
 class FixtureEncoder:
     """Fixed vectors exercise retrieval mechanics, not real embedding quality."""
-    def encode(self, text):
-        return np.array({
-            "alpha": [1, 0, 0], "alpha again": [1, 0, 0],
-            "bravo": [0, 1, 0], "charlie": [0, 0, 1],
-            "opposite": [-1, 0, 0],
-        }.get(text, [1, 1, 1]), dtype=float)
+    def encode(self, value):
+        def encode_one(text):
+            return np.array({
+                "alpha": [1, 0, 0],
+                "alpha again": [1, 0, 0],
+                "bravo": [0, 1, 0],
+                "charlie": [0, 0, 1],
+                "opposite": [-1, 0, 0],
+            }.get(text, [1, 1, 1]), dtype=float)
 
+        if isinstance(value, str):
+            return encode_one(value)
+
+        return np.stack([encode_one(text) for text in value])
+
+class RecordingEncoder:
+    """Records whether texts arrive individually or as a batch."""
+
+    def __init__(self):
+        self.calls = []
+
+    def encode(self, value):
+        self.calls.append(value)
+
+        if isinstance(value, str):
+            return np.array([1.0, 0.0])
+
+        return np.array(
+            [[1.0, float(index + 1)] for index, _ in enumerate(value)],
+            dtype=float,
+        )
 
 def record(id, content):
     return {"id": id, "role": "user", "content": content}
@@ -122,6 +146,26 @@ class MemoryTests(unittest.TestCase):
 
     def test_zero_vector_similarity_is_finite(self):
         self.assertEqual(cosine_similarity([[0, 0]], [[1, 0]])[0, 0], 0)
+
+    def test_initial_messages_are_encoded_in_one_batch(self):
+        encoder = RecordingEncoder()
+        messages = [
+            record("a", "alpha"),
+            record("b", "bravo"),
+            record("c", "charlie"),
+        ]
+
+        SemanticMemory(
+            self.history,
+            self.emojis,
+            messages=messages,
+            encoder=encoder,
+        )
+
+        self.assertEqual(
+            encoder.calls,
+            [["alpha", "bravo", "charlie"]],
+        )
 
 
 class GraphTests(unittest.TestCase):
